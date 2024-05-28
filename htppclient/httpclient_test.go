@@ -272,7 +272,7 @@ func TestHTTPClientPostRetriesOnFailure(t *testing.T) {
 	require.NoError(t, err, "Failed to make GET request after retry")
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-	require.Equal(t, "{ \"response\": \"Failed to make GET request\" }", mockRespBody(t, response))
+	require.Equal(t, "{ \"response\": \"error make GET request\" }", mockRespBody(t, response))
 
 	assert.Equal(t, numOfCalls, count)
 }
