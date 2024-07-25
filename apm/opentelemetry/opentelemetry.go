@@ -59,7 +59,7 @@ func (ot OpenTelemetryClient) InitTracer() func(context.Context) error {
 	resources, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			attribute.String("service.name", "api-profiling-go"),
+			attribute.String("service.name", ot.ServiceName),
 			attribute.String("library.language", "go"),
 		),
 	)
