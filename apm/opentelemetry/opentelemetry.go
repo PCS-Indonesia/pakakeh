@@ -67,13 +67,13 @@ func (ot OpenTelemetryClient) InitTracer() func(context.Context) error {
 		log.Println("Could not set resources: ", err)
 	}
 
-	otel.SetTracerProvider(
-		sdktrace.NewTracerProvider(
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithBatcher(exporter),
-			sdktrace.WithResource(resources),
-		),
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resources),
 	)
+
+	otel.SetTracerProvider(tp)
 
 	return exporter.Shutdown
 }
