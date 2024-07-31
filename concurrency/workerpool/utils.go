@@ -25,3 +25,7 @@ func Max(x, y int) int {
 	}
 	return y
 }
+
+func Range(end int) []struct{} {
+	return make([]struct{}, end)
+}

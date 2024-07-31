@@ -1,26 +1,21 @@
 package workerpool
 
-import (
-	"sync"
+import "sync"
+
+type (
+	// Job represents the job to be run.
+	Job struct {
+		Data interface{}
+	}
 )
-
-type WorkerImplementor interface {
-	Start(JobFunc)
-	Closed() bool
-}
-
-type JobFunc func(Job) error
 
 // NewWorker creates a worker.
 func NewWorker(done <-chan struct{}, workerPool chan<- chan Job, wg *sync.WaitGroup,
 	jobPool <-chan struct{}, errors chan error) *Worker {
-
-	bucket := make(chan Job, 1)
-
 	return &Worker{
 		pool:    workerPool,
 		jobPool: jobPool,
-		bucket:  bucket,
+		bucket:  make(chan Job, 1),
 		done:    done,
 		errors:  errors,
 		wg:      wg,
@@ -28,27 +23,30 @@ func NewWorker(done <-chan struct{}, workerPool chan<- chan Job, wg *sync.WaitGr
 	}
 }
 
-// Start will pushes the worker into workerqueue, listens stop sinyal.
-func (w *Worker) Start(jobFunc JobFunc) {
+// Start pushes the worker into worker queue, listens for signal to stop.
+func (w *Worker) Start(handler JobFunc) {
+
 	go func() {
 		for {
 			select {
 			case <-w.jobPool:
+
 				// worker has received a job request
 				w.pool <- w.bucket
 				job := <-w.bucket
-				if err := jobFunc(job); err != nil {
-					logger.Printf("Error when process job -> %s \n", err.Error())
+				if err := handler(job); err != nil {
+					logger.Printf("Error handling job -> %s \n", err.Error())
 					if w.errors != nil {
 						w.errors <- err
 					}
 				}
+
 			case <-w.done:
-				// worker has received stop sinyal
+				// worker has received a signal to stop
 				w.done = nil
 				close(w.bucket)
-				w.wg.Done()
 
+				w.wg.Done()
 				w.mu.Lock()
 				if !w.closed {
 					w.closed = true
@@ -61,7 +59,7 @@ func (w *Worker) Start(jobFunc JobFunc) {
 	}()
 }
 
-// Closed worker received a signal to stop
+// Closed returns true if worker received a signal to stop.
 func (w *Worker) Closed() bool {
 	w.mu.Lock()
 	defer w.mu.Unlock()

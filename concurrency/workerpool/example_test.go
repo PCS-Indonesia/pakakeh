@@ -8,10 +8,10 @@ import (
 	"github.com/PCS-Indonesia/pakakeh/concurrency/workerpool"
 )
 
-func ExamplePool(t *testing.T) {
+func TestExamplePool(t *testing.T) {
 	done := make(chan struct{})
 	mu := &sync.RWMutex{}
-	data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
+	data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	sum := 0
 	jobHandlerFunc := func() workerpool.JobFunc {
 		return func(j workerpool.Job) error {
@@ -22,11 +22,11 @@ func ExamplePool(t *testing.T) {
 		}
 	}
 
-	size := 10
+	size := 2
 
 	opt := func(c *workerpool.Config) error {
 		c.InitDispatcherNum = size
-		c.WorkerNum = 1000
+		c.WorkerNum = 5
 		return nil
 	}
 

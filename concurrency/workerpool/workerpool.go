@@ -6,28 +6,27 @@ import (
 	"sync"
 )
 
-// PoolImplementor is the Pool interface.
-type PoolImplementor interface {
-	Start()
-	Closed() bool
-	GetSize() int
-	StopDispatch(...int)
-	SetMaxPoolNum(int)
-}
-
 type (
-	Option         = func(*Config) error
+	PoolImplementor interface {
+		Start()
+		Closed() bool
+		GetSize() int
+		StopDispatch(...int)
+		SetMaxPoolNum(int)
+	}
+
+	Option = func(*Config) error
+
 	JobHandlerFunc = func() JobFunc
 )
 
 var (
 	logger = log.New(os.Stdout, "workerpool:", log.LstdFlags)
 
-	// set as global
 	DefaultConfig = Config{
 		InitDispatcherNum:  1,
 		MaxDispatcherNum:   3,
-		WorkerNum:          20,
+		WorkerNum:          50,
 		JobQueueBufferSize: 1000,
 	}
 )
@@ -37,9 +36,8 @@ func New(done <-chan struct{}, jobHandlerFunc JobHandlerFunc, options ...Option)
 	pConfig := DefaultConfig
 	setOption(&pConfig, options...)
 
-	// validate config
 	if pConfig.InitDispatcherNum < 1 {
-		logger.Panicln("InitDispatcherNum must greater than 0")
+		logger.Panicln("config InitPoolNum should not be less than 1")
 	}
 
 	if pConfig.MaxDispatcherNum < pConfig.InitDispatcherNum {
@@ -47,7 +45,7 @@ func New(done <-chan struct{}, jobHandlerFunc JobHandlerFunc, options ...Option)
 	}
 
 	if pConfig.WorkerNum < 1 {
-		logger.Panicln("WorkerNum must greater than 0")
+		logger.Panicln("config WorkerNum should not be less than 1")
 	}
 
 	p := &Pool{
@@ -69,17 +67,14 @@ func New(done <-chan struct{}, jobHandlerFunc JobHandlerFunc, options ...Option)
 
 // Start run dispatchers in the pool.
 func (p *Pool) Start() {
-	dispatcherCounter := make(chan []struct{}, p.config.InitDispatcherNum)
-
-	for range dispatcherCounter {
+	for range Range(p.config.InitDispatcherNum) {
 		p.newDispatcher()
 	}
-
 	p.mu.Lock()
 	p.poolNum = p.config.InitDispatcherNum
 	p.mu.Unlock()
 
-	go p.listen() // listen for pool done signal concurrently
+	go p.listen()
 }
 
 func (p *Pool) newDispatcher() {
@@ -87,20 +82,21 @@ func (p *Pool) newDispatcher() {
 	p.wg.Add(1)
 	d := NewDispatcher(p.doneDispatcher, p.wg, p.config.WorkerNum,
 		p.JobQueue, j, p.Errors)
-	d.Dispatch()
+	d.Run()
 }
 
+// listen for signals from done channel.
 func (p *Pool) listen() {
-	for { // loop until pool is closed or done
+	for {
 		select {
 		case _, open := <-p.done:
 			if !open {
 				close(p.JobQueue)
+
 				p.wg.Wait()
-
 				close(p.doneDispatcher)
-				p.mu.Lock()
 
+				p.mu.Lock()
 				if !p.closed {
 					p.closed = true
 				}
@@ -140,9 +136,7 @@ func (p *Pool) StopDispatch(num ...int) {
 	defer p.mu.Unlock()
 
 	if !p.closed && p.poolNum-n > 0 {
-		poolCounter := make(chan []struct{}, n)
-
-		for range poolCounter {
+		for range Range(n) {
 			p.doneDispatcher <- struct{}{}
 			p.poolNum--
 			p.wg.Done()
@@ -150,11 +144,10 @@ func (p *Pool) StopDispatch(num ...int) {
 	}
 }
 
+// Closed returns true if pool received a signal to stop.
 func (p *Pool) Closed() bool {
 	p.mu.Lock()
-	// p.closed = false
 	defer p.mu.Unlock()
-
 	return p.closed
 }
 

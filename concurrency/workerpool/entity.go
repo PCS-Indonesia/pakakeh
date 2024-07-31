@@ -3,9 +3,9 @@ package workerpool
 import "sync"
 
 type (
-	Job struct {
-		Data interface{}
-	}
+
+	// JobFunc completes the job.
+	JobFunc func(Job) error
 
 	// Pool represents a pool with dispatcher.
 	Pool struct {
@@ -57,6 +57,6 @@ type (
 		closed     bool
 		mu         *sync.Mutex
 		numWorkers int
-		jobHandler JobFunc
+		jobFunc    JobFunc
 	}
 )
