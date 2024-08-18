@@ -16,10 +16,11 @@ import (
 )
 
 type OpenTelemetryClient struct {
-	SchemaURL   string // format = url:port
-	ServiceName string
-	UseSecurity bool
-	Creds       *TLSCredentials
+	SchemaURL     string // format = url:port
+	ServiceName   string
+	UseSecurity   bool
+	Creds         *TLSCredentials
+	CustomSampler *sdktrace.Sampler
 }
 
 type TLSCredentials struct {
@@ -27,12 +28,19 @@ type TLSCredentials struct {
 	ServerNameOverride string
 }
 
-func NewOtelClient(url, svcName string, useSecurity bool, creds *TLSCredentials) OpenTelemetryClient {
+func NewOtelClient(
+	url,
+	svcName string,
+	useSecurity bool,
+	creds *TLSCredentials,
+	customSampler sdktrace.Sampler,
+) OpenTelemetryClient {
 	return OpenTelemetryClient{
-		SchemaURL:   url,
-		ServiceName: svcName,
-		UseSecurity: useSecurity,
-		Creds:       creds,
+		SchemaURL:     url,
+		ServiceName:   svcName,
+		UseSecurity:   useSecurity,
+		Creds:         creds,
+		CustomSampler: &customSampler,
 	}
 }
 
@@ -67,8 +75,12 @@ func (ot OpenTelemetryClient) InitTracer() func(context.Context) error {
 		log.Println("Could not set resources: ", err)
 	}
 
+	sampler := sdktrace.AlwaysSample()
+	if ot.CustomSampler != nil {
+		sampler = *ot.CustomSampler
+	}
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSampler(sampler),
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(resources),
 	)
