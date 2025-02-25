@@ -33,16 +33,24 @@ func GinLogger(param gin.LogFormatterParams) string {
 // RecoveryLogger is a middleware that will recover from any panic that occurs during
 // the execution of the request and return a 500 status code with a JSON response.
 // The error message will be logged with the "RECOVER" log level.
-func RecoveryLogger() gin.HandlerFunc {
-	return func (c *gin.Context) {
+func RecoveryLogger(withTrace bool, response map[string]any) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				log := New("RECOVER")
-				log.ErrorWithoutTrace(err)
+				if withTrace {
+					log.Error(err)
+				} else {
+					log.ErrorWithoutTrace(err)
+				}
 
-				c.AbortWithStatusJSON(500, gin.H{
+				jsonObj := gin.H{
 					"error": "An unexpected error occurred. Please try again later / contact admin",
-				})
+				}
+				if response != nil {
+					jsonObj = response
+				}
+				c.AbortWithStatusJSON(500, jsonObj)
 			}
 		}()
 		c.Next()

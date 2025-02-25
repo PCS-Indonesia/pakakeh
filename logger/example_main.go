@@ -6,10 +6,8 @@ import (
 
 func Examplemain() {
 	r := gin.New()
-	r.Use(RecoveryLogger())
+	r.Use(RecoveryLogger(false, nil))
 	r.Use(gin.LoggerWithFormatter(GinLogger))
-
-	gin.LoggerWithFormatter(GinLogger)
 
 	gin.DebugPrintRouteFunc = GinDebugRoute
 	gin.DebugPrintFunc = GinDebugPrint
