@@ -7,7 +7,7 @@ The Logger package provides custom logging utilities that can be integrated with
 To install the Logger package, simply import it into your `.go` files:
 
 ```go
-import "github.com/pakakeh/logger"
+import "github.com/PCS-Indonesia/pakakeh/logger"
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ Prefix must be written with screaming kebab case ("CREATE-TICKET", "HOHO-HIHE", 
 package main
 
 import (
-	"github.com/pakakeh/logger"
+	"github.com/PCS-Indonesia/pakakeh/logger"
 )
 
 func createProblems() {
@@ -42,7 +42,7 @@ The instance of logger New can be initialized with dependency injection and usag
 
 ```go
 import (
-	"github.com/pakakeh/logger"
+	"github.com/PCS-Indonesia/pakakeh/logger"
 )
 
 type Service struct {
@@ -73,7 +73,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pakakeh/logger"
+	"github.com/PCS-Indonesia/pakakeh/logger"
 )
 
 func main() {
@@ -103,7 +103,7 @@ package main
 import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"github.com/pakakeh/logger"
+	"github.com/PCS-Indonesia/pakakeh/logger"
 )
 
 func main() {
