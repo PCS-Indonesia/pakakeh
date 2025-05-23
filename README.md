@@ -15,8 +15,8 @@ How to contribute on `pakakeh` :
 ## How To Use
 See `README.md` in each folders to see how to use these modules.
 - [httpclient](httpclient/README.md)
-- [middlewares](middlewares/README.MD)
-    - [elasticapm](middlewares/elasticapm/README.md)
+- [elasticapm](apm/elasticapm/README.md)
+- [logger](logger/README.md)
 
 ## Installation
 ```bash
