@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var now = time.Now().Format("2006/01/02 15:04:05")
-
 // GinLogger is a custom logger that can be used with gin Framework. This function will
 // generate a custom log format as follows:
 //
@@ -18,6 +16,7 @@ var now = time.Now().Format("2006/01/02 15:04:05")
 // that ends with a newline character. The function will also always return a
 // string, regardless of whether the error is nil or not.
 func GinLogger(param gin.LogFormatterParams) string {
+	var now = time.Now().Format("2006/01/02 15:04:05")
 	return fmt.Sprintf("[%s] [GIN] [INFO] [%d] [%s] [%s] [%s] [%dms] [%s] %s \n",
 		now,
 		param.StatusCode,
@@ -61,6 +60,7 @@ func RecoveryLogger(withTrace bool, response map[string]any) gin.HandlerFunc {
 // It prints the HTTP method, absolute path, handler name, and the number of handlers
 // associated with the route.
 func GinDebugRoute(httpMethod, absolutePath, handlerName string, nuHandlers int) {
+	var now = time.Now().Format("2006/01/02 15:04:05")
 	fmt.Printf("[%s] [GIN] [INFO] %v %v %v %v \n", now, httpMethod, absolutePath, handlerName, nuHandlers)
 }
 
@@ -73,5 +73,6 @@ func GinDebugRoute(httpMethod, absolutePath, handlerName string, nuHandlers int)
 //   - format: The format string for the log message.
 //   - values: A variadic parameter representing the values to be logged.
 func GinDebugPrint(format string, values ...interface{}) {
+	var now = time.Now().Format("2006/01/02 15:04:05")
 	fmt.Printf("[%s] [GIN] [INFO] %v \n", now, values)
 }
