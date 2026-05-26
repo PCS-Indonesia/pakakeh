@@ -1,21 +1,25 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
 
-// Log for logs a message with info level. It formats the message with an "[INFO]" prefix
-// and logs it using the info level. The message is prepended with the category
-// specified by the flag field.
-// Note: If it used for logging DB, log level must be log info in CustomLogger struct.
-func (l *Log) Log(message ...any) {
+// Log logs a message with info level, including the request ID from context.
+// It formats the message with an "[INFO]" prefix and the request ID appended at the end.
+func (l *Log) Log(ctx context.Context, message ...any) {
+	requestID := GetRequestID(ctx)
+
 	var msg strings.Builder
 	if len(message) > 0 {
 		msg.WriteString("[INFO] ")
 		msg.WriteString(fmt.Sprintf("%v", message[0]))
+		if requestID != "" {
+			msg.WriteString(fmt.Sprintf(" [%s]", requestID))
+		}
 		message[0] = msg.String()
 	}
-	
+
 	l.newLog.Info().Str("category", l.flag).Msg(fmt.Sprint(message...))
 }
