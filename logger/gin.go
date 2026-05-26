@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,14 +11,11 @@ import (
 // GinLogger is a custom logger that can be used with gin Framework. This function will
 // generate a custom log format as follows:
 //
-// [Date] [GIN] [INFO] [StatusCode] [Method] [Path] [ClientIP] [Latency] [UserAgent] [ErrorMessage]
-//
-// The log format is customizable, but this function will always return a string
-// that ends with a newline character. The function will also always return a
-// string, regardless of whether the error is nil or not.
+// [Date] [GIN] [INFO] [RequestID] [StatusCode] [Method] [Path] [ClientIP] [Latency] [UserAgent] [ErrorMessage]
 func GinLogger(param gin.LogFormatterParams) string {
 	var now = time.Now().Format("2006/01/02 15:04:05")
-	return fmt.Sprintf("[%s] [GIN] [INFO] [%d] [%s] [%s] [%s] [%dms] [%s] %s \n",
+	requestID := GetRequestID(param.Request.Context())
+	return fmt.Sprintf("[%s] [GIN] [INFO] [%d] [%s] [%s] [%s] [%dms] [%s] %s [%s]\n",
 		now,
 		param.StatusCode,
 		param.Method,
@@ -26,6 +24,7 @@ func GinLogger(param gin.LogFormatterParams) string {
 		param.Latency.Milliseconds(),
 		param.Request.UserAgent(),
 		param.ErrorMessage,
+		requestID,
 	)
 }
 
@@ -36,11 +35,11 @@ func RecoveryLogger(withTrace bool, response map[string]any) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				log := New("RECOVER")
+				l := New("RECOVER")
 				if withTrace {
-					log.Error(err)
+					l.Error(c.Request.Context(), err)
 				} else {
-					log.ErrorWithoutTrace(err)
+					l.ErrorWithoutTrace(c.Request.Context(), err)
 				}
 
 				jsonObj := gin.H{
@@ -65,14 +64,13 @@ func GinDebugRoute(httpMethod, absolutePath, handlerName string, nuHandlers int)
 }
 
 // GinDebugPrint logs debug information with a custom format.
-// The log message includes the current timestamp, formatted as specified,
-// followed by the provided values. It is intended for use with the Gin
-// framework to output debug information during the request processing.
-//
-// Parameters:
-//   - format: The format string for the log message.
-//   - values: A variadic parameter representing the values to be logged.
 func GinDebugPrint(format string, values ...interface{}) {
 	var now = time.Now().Format("2006/01/02 15:04:05")
 	fmt.Printf("[%s] [GIN] [INFO] %v \n", now, values)
+}
+
+// NewContextFromGin creates a standard context.Context from a gin.Context.
+// Useful when passing context to service/repository layers that don't depend on gin.
+func NewContextFromGin(c *gin.Context) context.Context {
+	return c.Request.Context()
 }

@@ -14,7 +14,6 @@ type CustomLogger struct {
 	logger.Config
 }
 
-
 func (c *CustomLogger) LogMode(level logger.LogLevel) logger.Interface {
 	newLogger := *c
 	newLogger.LogLevel = level
@@ -23,19 +22,34 @@ func (c *CustomLogger) LogMode(level logger.LogLevel) logger.Interface {
 
 func (c *CustomLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	if c.LogLevel >= logger.Info {
-		fmt.Printf("[INFO] "+msg+"\n", data...)
+		requestID := GetRequestID(ctx)
+		if requestID != "" {
+			fmt.Printf("[INFO] "+msg+" [%s]\n", append(data, requestID)...)
+		} else {
+			fmt.Printf("[INFO] "+msg+"\n", data...)
+		}
 	}
 }
 
 func (c *CustomLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if c.LogLevel >= logger.Warn {
-		fmt.Printf("[WARN] "+msg+"\n", data...)
+		requestID := GetRequestID(ctx)
+		if requestID != "" {
+			fmt.Printf("[WARN] "+msg+" [%s]\n", append(data, requestID)...)
+		} else {
+			fmt.Printf("[WARN] "+msg+"\n", data...)
+		}
 	}
 }
 
 func (c *CustomLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if c.LogLevel >= logger.Error {
-		fmt.Printf("[ERROR] "+msg+"\n", data...)
+		requestID := GetRequestID(ctx)
+		if requestID != "" {
+			fmt.Printf("[ERROR] "+msg+" [%s]\n", append(data, requestID)...)
+		} else {
+			fmt.Printf("[ERROR] "+msg+"\n", data...)
+		}
 	}
 }
 
@@ -48,12 +62,12 @@ func (c *CustomLogger) Trace(ctx context.Context, begin time.Time, fc func() (sq
 	switch {
 	case err != nil && c.LogLevel >= logger.Error:
 		sql, _ := fc()
-		log.Log(fmt.Sprintf("%s %s\n", err, sql))
+		log.ErrorWithoutTrace(ctx, fmt.Sprintf("%s %s", err, sql))
 	case elapsed > c.SlowThreshold && c.SlowThreshold != 0 && c.LogLevel >= logger.Warn:
 		sql, rows := fc()
-		log.Log(fmt.Sprintf("SLOW SQL >= %v [%.3fms] [rows:%v] %s\n", c.SlowThreshold, float64(elapsed.Nanoseconds())/1e6, rows, sql))
+		log.Log(ctx, fmt.Sprintf("SLOW SQL >= %v [%.3fms] [rows:%v] %s", c.SlowThreshold, float64(elapsed.Nanoseconds())/1e6, rows, sql))
 	case c.LogLevel >= logger.Info:
 		sql, rows := fc()
-		log.Log(fmt.Sprintf("[%.3fms] [rows:%v] %s\n", float64(elapsed.Nanoseconds())/1e6, rows, sql))
+		log.Log(ctx, fmt.Sprintf("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, rows, sql))
 	}
 }

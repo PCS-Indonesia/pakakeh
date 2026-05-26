@@ -6,6 +6,9 @@ import (
 
 func Examplemain() {
 	r := gin.New()
+
+	// Add RequestID middleware first — it sets the request ID in context
+	r.Use(RequestIDMiddleware())
 	r.Use(RecoveryLogger(false, nil))
 	r.Use(gin.LoggerWithFormatter(GinLogger))
 
@@ -13,9 +16,11 @@ func Examplemain() {
 	gin.DebugPrintFunc = GinDebugPrint
 
 	r.GET("/ping", func(c *gin.Context) {
-		log := New("PING")
+		l := New("PING")
+		ctx := c.Request.Context()
 
-		log.Log("Test log ping")
+		l.Log(ctx, "Test log ping")
+		l.Error(ctx, "something went wrong")
 
 		// Test recovery
 		var a any

@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -28,6 +29,6 @@ func Exampledatabase() {
 	})
 
 	if err != nil {
-		log.Fatal("Failed to connect to database")
+		log.Fatal(context.TODO(), "Failed to connect to database")
 	}
 }
